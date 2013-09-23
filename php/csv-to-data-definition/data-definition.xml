@@ -1,0 +1,12 @@
+<system-data-structure>
+  <text type="calendar" identifier="startdate" label="Date"/>
+  <text identifier="starttime" label="Start Time" size="8"/>
+  <text identifier="opponent" label="Opponent"/>
+  <text identifier="location" label="Location"/>
+  <text type="checkbox" identifier="preseason" label="Preseason Game?">
+    <checkbox-item value="Yes"/>
+  </text>
+  <text identifier="results" label="Results"/>
+  <text wysiwyg="true" identifier="recap" label="Game Recap"/>
+  <asset type="file" identifier="photos" label="Action Photos" multiple="true"/>
+</system-data-structure>
