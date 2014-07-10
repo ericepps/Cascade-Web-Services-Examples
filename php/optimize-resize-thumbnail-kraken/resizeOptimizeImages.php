@@ -14,9 +14,6 @@ $apiSecret = 'evenmoresecret';
 require_once('/path/to/Kraken.php');
 $kraken = new Kraken($apiKey,$apiSecret);
 
-writeToLog("Read Folder");
-echo "\n";
-
 // set folders to resize images and/or create thumbnail images																	CHECK
 $resizeFolders = array();
 $resizeFolders[] = array('folder' => 'folder/to/resize', 'fullSize' => 1000);
@@ -35,7 +32,7 @@ function readFolder ($folderReadID, $auth, $cascade, $resizeFolders, $excludeFol
 	$readParams = array( 'authentication' => $auth, 'identifier' => $id );	
 	$folderRead=$cascade->read($readParams);
 	if ( $folderRead->readReturn->success != 'true' ) {
-		writeToLog("Error reading folder: ".$folderReadID);
+		echo "Error reading folder: ".$folderReadID;
 	} else {
 		$folderChildren = $folderRead->readReturn->asset->folder->children->child;
 		$thisFolder = $folderRead->readReturn->asset->folder->parentFolderPath."/".$folderRead->readReturn->asset->folder->name;
@@ -49,7 +46,7 @@ function readFolder ($folderReadID, $auth, $cascade, $resizeFolders, $excludeFol
 				if(array_key_exists('fullSize',$value)) $fullSize = $value['fullSize'];
 			}
 		}
-		writeToLog("Folder: ".$thisFolder." (".count($folderChildren).")".($excludeThisFolder ? ' - Excluded' : '').($thumbSize > 0 ? ' - Thumbnail:'.$thumbSize : '').($fullSize > 0 ? ' - Resize:'.$fullSize : ''));
+		echo "Folder: ".$thisFolder." (".count($folderChildren).")".($excludeThisFolder ? ' - Excluded' : '').($thumbSize > 0 ? ' - Thumbnail:'.$thumbSize : '').($fullSize > 0 ? ' - Resize:'.$fullSize : '');
 		// If folder is excluded or there are no children, stop processing this and child folders.
 		if($excludeThisFolder === false && !is_null($folderChildren)) {
 		// if there's just one child, put it in an array
@@ -62,7 +59,6 @@ function readFolder ($folderReadID, $auth, $cascade, $resizeFolders, $excludeFol
 				if ($value->type == 'folder') {
 					readFolder($value->id, $auth, $cascade, $resizeFolders, $excludeFolders, $kraken, $thumbSize, $fullSize);
 				} elseif ($value->type == 'file' && (substr(strtolower($childPath),-4) == 'jpeg' || substr(strtolower($childPath),-3) == 'jpg' || substr(strtolower($childPath),-3) == 'png' || substr(strtolower($childPath),-3) == 'gif') ) {
-//					writeToLog($value->path->path." T".$thumbSize." F".$fullSize." E".$excludeThisFolder);
 					readImage($value->id, $auth, $cascade, $kraken, $thumbSize, $fullSize);
 				}
 			}
@@ -75,7 +71,7 @@ function readImage($fileReadID, $auth, $cascade, $kraken, $thumbSize=0, $fullSiz
 	$readParams = array( 'authentication' => $auth, 'identifier' => $id );	
 	$fileRead=$cascade->read($readParams);
 	if ( $fileRead->readReturn->success != 'true' ) {
-		writeToLog("looks like it didn't work".$fileReadID);
+		echo "Error reading image: ".$fileReadID;
 	} else {
 		// Retrieve date of optimization for comparison. It's the second Dynamic Metadata field, so may not be true for all. 	CHECK
 		$imgOptimizeDate = date('U',$fileRead->readReturn->asset->file->metadata->dynamicFields->dynamicField[1]->fieldValues->fieldValue->value*.001);
