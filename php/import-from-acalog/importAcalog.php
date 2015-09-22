@@ -9,13 +9,8 @@ $username = "";
 $password = ""; 
 $cascadePath = "";
 
-// Cascade Server block IDs
-// create 4 XML Blocks in Cascade Server and fill in the IDs below. They will be populated with the Acalog 
-// catalog data for the current catalog (assumes a single published, non-archived catalog).
-$courseListPath = '';
-$courseListDetailPath = '';
-$programListPath = '';
-$programListDetailPath = '';
+// parent path for blocks
+$parentFolderPath = '';
 
 //-----------------------------------------------------------------------------------
 function getResult($result,$fullName) {
@@ -32,17 +27,36 @@ function isSuccess($text) {
 function extractMessage($text) {
 	return substr($text, strpos($text, "<message>")+9,strpos($text, "</message>")-(strpos($text, "<message>")+9));
 }
-function updateCascade($cascade,$auth,$blockPath,$siteName,$xmlData) {
-	$path = array('path' => $blockPath, 'siteName' => $siteName);
+function updateCascade($cascade,$auth,$parentFolderPath,$blockName,$siteName,$xmlData) {
+	$path = array('path' => $parentFolderPath.'/'.$blockName, 'siteName' => $siteName);
 	$id = array('path' => $path, 'type' => 'block');
-	$readParams = array( 'authentication' => $auth, 'identifier' => $id );	
-	$blockRead=$cascade->read($readParams);
-	$asset = $blockRead->readReturn->asset->xmlBlock;
-	$asset->xml = $xmlData;
-	$editParams = array('authentication' => $auth, 'asset' => array('xmlBlock' => $asset));
-	$cascade->edit($editParams);
-	$result = $cascade->__getLastResponse();
-	getResult($result,$asset->name);
+	$readParams = array( 'authentication' => $auth, 'identifier' => $id );				
+
+	$blockRead = $cascade->read($readParams);
+	if ( $blockRead->readReturn->success != 'true' ) {
+		$name = $blockName;
+		$template_params = array(
+			'authentication' => $auth,
+				'asset' => array(
+					'xmlBlock' => array(
+						'xml' => $xmlData,
+						'parentFolderPath' => $parentFolderPath,
+						'name' => $name,
+						'siteName' => 'www.svcc.edu'
+					)
+				)
+			);
+		$cascade->create($template_params);
+		$result = $cascade->__getLastResponse();
+		getResultAction($result,$blockPath,' created.');
+	} else {
+		$asset = $blockRead->readReturn->asset->xmlBlock;
+		$asset->xml = $xmlData;
+		$editParams = array('authentication' => $auth, 'asset' => array('xmlBlock' => $asset));
+		$cascade->edit($editParams);
+		$result = $cascade->__getLastResponse();
+		getResultAction($result,$asset->name,' updated.');
+	}
 }
 
 $cascade = new SoapClient($cascadePath . "/ws/services/AssetOperationService?wsdl",array('trace' => 1));
@@ -57,6 +71,7 @@ $catalogReturn = curl_exec($ch);
 $catalogXML = simplexml_load_string(str_replace(' xmlns="http://acalog.com/catalog/1.0"','',$catalogReturn));
 curl_close($ch); 
 $selCatalog = $catalogXML->xpath('//catalog[state/published = "Yes" and state/archived = "No"]/@id');
+updateCascade($cascade,$auth,$parentFolderPath,'Acalog Catalogs',$siteName,$catalogReturn);
 $selCatalog = str_replace('acalog-catalog-','',$selCatalog[0][0][0]);
 
 // ****************************************
@@ -68,7 +83,7 @@ curl_setopt($ch, CURLOPT_URL, 'http://' . $apiURL . '.apis.acalog.com/v1/search/
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $programReturn = curl_exec($ch); 
 curl_close($ch); 
-updateCascade($cascade,$auth,$programListPath,$siteName,$programReturn);
+updateCascade($cascade,$auth,$parentFolderPath,'Acalog Programs',$siteName,$programReturn);
 
 // get IDs from list of programs
 $programXML = simplexml_load_string($programReturn);
@@ -82,7 +97,7 @@ curl_setopt($ch, CURLOPT_URL, 'http://' . $apiURL . '.apis.acalog.com/v1/content
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $programDetailReturn = curl_exec($ch); 
 curl_close($ch); 
-updateCascade($cascade,$auth,$programListDetailPath,$siteName,str_replace(' xmlns="http://acalog.com/catalog/1.0"','',$programDetailReturn));
+updateCascade($cascade,$auth,$parentFolderPath,'Acalog Programs Detail',$siteName,str_replace(' xmlns="http://acalog.com/catalog/1.0"','',$programDetailReturn));
 
 
 // ****************************************
@@ -94,7 +109,7 @@ curl_setopt($ch, CURLOPT_URL, 'http://' . $apiURL . '.apis.acalog.com/v1/search/
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $courseReturn = curl_exec($ch); 
 curl_close($ch); 
-updateCascade($cascade,$auth,$courseListPath,$siteName,$courseReturn);
+updateCascade($cascade,$auth,$parentFolderPath,'Acalog Courses',$siteName,$courseReturn);
 
 // get IDs from list of courses
 $courseXML = simplexml_load_string($courseReturn);
@@ -108,5 +123,5 @@ curl_setopt($ch, CURLOPT_URL, 'http://' . $apiURL . '.apis.acalog.com/v1/content
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $courseDetailReturn = curl_exec($ch); 
 curl_close($ch); 
-updateCascade($cascade,$auth,$courseListDetailPath,$siteName,str_replace(' xmlns="http://acalog.com/catalog/1.0"','',$courseDetailReturn));
+updateCascade($cascade,$auth,$parentFolderPath,'Acalog Courses Detail',$siteName,str_replace(' xmlns="http://acalog.com/catalog/1.0"','',$courseDetailReturn));
 ?> 
