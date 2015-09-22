@@ -11,7 +11,7 @@ function to_xml(SimpleXMLElement $object, array $data) {
     }   
 }   
 
-function createCascadeCareer($cascade,$auth,$blockPath,$blockName,$siteName,$theData,$dataType) {
+function createXMLBlock($cascade,$auth,$blockPath,$blockName,$siteName,$theData,$dataType) {
 	$path = array('path' => $blockPath.'/'.$blockName, 'siteName' => $siteName);
 	$id = array('path' => $path, 'type' => 'block');
 	$readParams = array( 'authentication' => $auth, 'identifier' => $id );	
@@ -54,9 +54,7 @@ function createCascadeCareer($cascade,$auth,$blockPath,$blockName,$siteName,$the
 
 $restURL = 'https://api.data.gov/ed/collegescorecard/v1/schools.json?id=148672,147703&_fields=school.name,school.city,school.state,id&api_key={{secret}}';
 $scJSON = file_get_contents($restURL);
-createCascadeCareer($cascade,$auth, '/-blocks/CareerOneStop', 'scorecard', $siteName, $scJSON,'json');
-		$jsonData = json_decode($scJSON);
-
+createXMLBlock($cascade,$auth, '/-blocks/CareerOneStop', 'scorecard', $siteName, $scJSON,'json');
 
 $zipCode = '99999';
 $apiKey = '{{secret}}';
@@ -66,11 +64,11 @@ foreach($socCodes as $value) {
 	$socCode = str_replace('-','',$value);
 	$soapURL = 'http://www.careerinfonet.org/webservices/occwages_webservice/occwagesservice.asmx/GetWagesByZip?userID='.$apiKey.'&soccode='.$socCode.'&zip='.$zipCode;
 	$wagesXML = file_get_contents($soapURL);
-	createCascadeCareer($cascade,$auth, '/-blocks/CareerOneStop/Wage', $value, $siteName, $wagesXML,'xml');
+	createXMLBlock($cascade,$auth, '/-blocks/CareerOneStop/Wage', $value, $siteName, $wagesXML,'xml');
 	
 	$soapURL = 'http://www.careerinfonet.org/webservices/occupationdata/occupationdata.asmx/getOccT2Data?userID='.$apiKey.'&onetcode='.$value.'.00';
 	$profileXML = file_get_contents($soapURL);
-	createCascadeCareer($cascade,$auth, '/-blocks/CareerOneStop/Profile', $row['socCode'], $siteName, $profileXML,'xml');
+	createXMLBlock($cascade,$auth, '/-blocks/CareerOneStop/Profile', $row['socCode'], $siteName, $profileXML,'xml');
 }
 
 ?>
