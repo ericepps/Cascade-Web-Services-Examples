@@ -91,6 +91,15 @@ $programXMLIDs = $programXML->xpath('//result');
 $programIDs = '';
 while(list( , $node) = each($programXMLIDs)) {
 	$programIDs .= '&ids[]='.$node->id[0];
+	$programID = $node->id[0];
+	
+	$ch = curl_init(); 
+	curl_setopt($ch, CURLOPT_URL, 'http://' . $apiURL . '.apis.acalog.com/v1/content?key=' . $apiKey . '&format=xml&method=getItems&type=programs&ids[]=' . $programID . '&catalog=' . $selCatalog); 
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	$programIndDetailReturn = curl_exec($ch); 
+	curl_close($ch); 
+	updateCascade($cascade,$auth,$parentFolderPath.'/Programs',$programID,str_replace(' xmlns="http://acalog.com/catalog/1.0"','',$programIndDetailReturn));	
+
 }
 $ch = curl_init(); 
 curl_setopt($ch, CURLOPT_URL, 'http://' . $apiURL . '.apis.acalog.com/v1/content?key=' . $apiKey . '&format=xml&method=getItems&type=programs' . $programIDs . '&catalog=' . $selCatalog . '&options[full]=1'); 
