@@ -22,6 +22,8 @@ function createXMLBlock($cascade,$auth,$blockPath,$blockName,$siteName,$theData,
 		$xml = new SimpleXMLElement('<root/>');
 		to_xml($xml, $jsonData);
 		$xmlData = $xml->asXML();
+	} elseif ($dataType == 'text') {
+		$xmlData = '<xml>'.$theData.'</xml>';
 	}
 
 	$blockRead = $cascade->read($readParams);
